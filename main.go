@@ -34,21 +34,24 @@ var config = struct {
 }{}
 
 func init() {
+	log.Println("try load ssh_private_key file to env BV_GIT_PRIVATE_KEY")
 	f, err := os.Open("ssh_private_key")
 	if err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
+		if errors.Is(err, os.ErrNotExist) {
+			log.Println("skip : ssh_private_key file not exists")
+		} else {
 			log.Println("load ssh_private_key error", err)
 		}
 		return
 	}
+	defer f.Close()
 	privateKey, err := ioutil.ReadAll(f)
 	if err != nil {
 		log.Println("read ssh_private_key error", err)
 		return
 	}
-	defer f.Close()
 	os.Setenv("BV_GIT_PRIVATE_KEY", string(privateKey))
-	log.Println("loaded ssh_private_key from file ssh_private_key")
+	log.Println("load ssh_private_key file to env BV_GIT_PRIVATE_KEY success")
 }
 
 func main() {
@@ -103,6 +106,7 @@ func main() {
 func execute() {
 	publicKeys, err := ssh.NewPublicKeys(config.GitSSHKeyUser, []byte(config.GitSSHKey), config.GitSSHKeyPassword)
 	if err != nil {
+		log.Println("BV_GIT_PRIVATE_KEY", config.GitSSHKey)
 		log.Fatalln("NewPublicKeys", err)
 	}
 	repo, err := git.PlainClone(config.GitCloneDir, false, &git.CloneOptions{

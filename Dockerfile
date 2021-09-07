@@ -9,12 +9,12 @@ ENV GOPROXY="https://goproxy.io"
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
-COPY --from=Webpack /src /src
+COPY . .
 RUN go build -tags "${TAGS}" -o /src/dist/bumpversion
 
-FROM harbor.bianfeng.com/library/alpine:latest
+FROM harbor.bianfeng.com/library/alpine:3.13
 WORKDIR /data
 ENV TZ=Asia/Shanghai
-COPY --from=Builder --chown=0:0 /src/dist /app
+COPY --from=Builder --chown=0:0 /src/dist /usr/local/bin
 
-ENTRYPOINT [ "/app/bumpversion" ]
+ENTRYPOINT [ "bumpversion" ]

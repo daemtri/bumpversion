@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -104,7 +103,7 @@ func main() {
 func execute() {
 	publicKeys, err := ssh.NewPublicKeys(config.GitSSHKeyUser, []byte(config.GitSSHKey), config.GitSSHKeyPassword)
 	if err != nil {
-		log.Fatalln("NewPublicKeysFromFile", err)
+		log.Fatalln("NewPublicKeys", err)
 	}
 	repo, err := git.PlainClone(config.GitCloneDir, false, &git.CloneOptions{
 		URL:      config.GitURL,
@@ -149,14 +148,6 @@ func execute() {
 		log.Fatalln(err)
 	}
 	log.Println("git push successful")
-}
-
-func homePath(subPath string) string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	return filepath.Join(home, subPath)
 }
 
 func bumpRepoImageVersion(repo billy.Filesystem, path, image, tag string) error {

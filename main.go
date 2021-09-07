@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -106,7 +107,7 @@ func main() {
 func execute() {
 	publicKeys, err := ssh.NewPublicKeys(config.GitSSHKeyUser, []byte(config.GitSSHKey), config.GitSSHKeyPassword)
 	if err != nil {
-		log.Println("BV_GIT_PRIVATE_KEY", config.GitSSHKey)
+		log.Println("BV_GIT_PRIVATE_KEY", base64.RawStdEncoding.EncodeToString([]byte(config.GitSSHKey)))
 		log.Fatalln("NewPublicKeys", err)
 	}
 	repo, err := git.PlainClone(config.GitCloneDir, false, &git.CloneOptions{

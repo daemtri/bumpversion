@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -19,6 +20,8 @@ import (
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
 	cli "github.com/jawher/mow.cli"
+
+	cryptossh "golang.org/x/crypto/ssh"
 )
 
 var config = struct {
@@ -109,6 +112,9 @@ func execute() {
 	if err != nil {
 		log.Println("BV_GIT_PRIVATE_KEY", base64.RawStdEncoding.EncodeToString([]byte(config.GitSSHKey)))
 		log.Fatalln("NewPublicKeys", err)
+	}
+	publicKeys.HostKeyCallbackHelper.HostKeyCallback = func(hostname string, remote net.Addr, key cryptossh.PublicKey) error {
+		return nil
 	}
 	repo, err := git.PlainClone(config.GitCloneDir, false, &git.CloneOptions{
 		URL:      config.GitURL,

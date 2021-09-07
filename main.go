@@ -34,6 +34,24 @@ var config = struct {
 	Tag   string
 }{}
 
+func init() {
+	f, err := os.Open("ssh_private_key")
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			log.Println("load ssh_private_key error", err)
+		}
+		return
+	}
+	privateKey, err := ioutil.ReadAll(f)
+	if err != nil {
+		log.Println("read ssh_private_key error", err)
+		return
+	}
+	defer f.Close()
+	os.Setenv("BV_GIT_PRIVATE_KEY", string(privateKey))
+	log.Println("loaded ssh_private_key from file ssh_private_key")
+}
+
 func main() {
 	// create an app
 	app := cli.App("bumpversion", "bump the image version in the k8s resource file in the GIT repository")
@@ -54,7 +72,6 @@ func main() {
 		Name:   "git-ssh-key",
 		Desc:   "git repo SSH private key",
 		EnvVar: "BV_GIT_PRIVATE_KEY",
-		Value:  homePath(".ssh/id_rsa"),
 	})
 	app.StringPtr(&config.GitSSHKeyUser, cli.StringOpt{
 		Name:   "git-ssh-key-user",
@@ -85,7 +102,7 @@ func main() {
 }
 
 func execute() {
-	publicKeys, err := ssh.NewPublicKeysFromFile(config.GitSSHKeyUser, config.GitSSHKey, config.GitSSHKeyPassword)
+	publicKeys, err := ssh.NewPublicKeys(config.GitSSHKeyUser, []byte(config.GitSSHKey), config.GitSSHKeyPassword)
 	if err != nil {
 		log.Fatalln("NewPublicKeysFromFile", err)
 	}

@@ -33,27 +33,6 @@ var config = struct {
 	Tag   string
 }{}
 
-func init() {
-	log.Println("try load ssh_private_key file to env BV_GIT_PRIVATE_KEY")
-	f, err := os.Open("ssh_private_key")
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			log.Println("skip : ssh_private_key file not exists")
-		} else {
-			log.Println("load ssh_private_key error", err)
-		}
-		return
-	}
-	defer f.Close()
-	privateKey, err := ioutil.ReadAll(f)
-	if err != nil {
-		log.Println("read ssh_private_key error", err)
-		return
-	}
-	os.Setenv("BV_GIT_PRIVATE_KEY", string(privateKey))
-	log.Println("load ssh_private_key file to env BV_GIT_PRIVATE_KEY success")
-}
-
 func main() {
 	// create an app
 	app := cli.App("bumpversion", "bump the image version in the k8s resource file in the GIT repository")

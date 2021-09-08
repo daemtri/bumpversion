@@ -1,3 +1,4 @@
 ssh_private_key
 bumpversion
 resource-repo
+run-test.sh

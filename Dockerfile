@@ -1,5 +1,6 @@
 FROM harbor.bianfeng.com/library/golang:1.17-alpine AS Builder
 ARG TAGS="timetzdata"
+ARG VERSION
 WORKDIR /src
 ENV CGO_ENABLED=0
 ENV GOPRIVATE="hub.imeete.com,git.imeete.com,git.bianfeng.com"
@@ -10,7 +11,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN go build -tags "${TAGS}" -o /src/dist/bumpversion
+RUN go build -tags "${TAGS}" -ldflags "-X main.Version=${VERSION}" -o /src/dist/bumpversion
 
 FROM harbor.bianfeng.com/library/alpine:3.13
 RUN apk add --no-cache bind-tools \

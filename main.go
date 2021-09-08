@@ -20,23 +20,26 @@ import (
 	cli "github.com/jawher/mow.cli"
 )
 
-var config = struct {
-	GitURL            string
-	GitSSHKey         string
-	GitSSHKeyUser     string
-	GitSSHKeyPassword string
-	GitCommitAuthor   string
-	GitCommitEmail    string
-	GitCloneDir       string
+var (
+	config = struct {
+		GitURL            string
+		GitSSHKey         string
+		GitSSHKeyUser     string
+		GitSSHKeyPassword string
+		GitCommitAuthor   string
+		GitCommitEmail    string
+		GitCloneDir       string
 
-	Image string
-	Tag   string
-}{}
+		Image string
+		Tag   string
+	}{}
+	Version string = "0.0.0"
+)
 
 func main() {
 	// create an app
 	app := cli.App("bumpversion", "bump the image version in the k8s resource file in the GIT repository")
-	app.Version("v version", "1.0.0")
+	app.Version("v version", Version)
 	app.Spec = "[--git-url] [--git-clone-dir] [--git-ssh-key] [--git-ssh-key-user] [--git-ssh-key-password] [-i=<image> [-t=<tag>]]"
 	app.StringPtr(&config.GitURL, cli.StringOpt{
 		Name:   "git-url",
@@ -83,6 +86,7 @@ func main() {
 }
 
 func execute() {
+	log.Println("bumpversion version:", Version)
 	publicKeys, err := ssh.NewPublicKeysFromFile(config.GitSSHKeyUser, config.GitSSHKey, config.GitSSHKeyPassword)
 	if err != nil {
 		log.Fatalln("NewPublicKeys", err)

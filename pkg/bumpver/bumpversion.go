@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -17,12 +18,18 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
+	cryptossh "golang.org/x/crypto/ssh"
 )
 
 func Execute(logger *log.Logger, config *Config) error {
 	publicKeys, err := ssh.NewPublicKeysFromFile(config.GitSSHKeyUser, config.GitSSHKey, config.GitSSHKeyPassword)
 	if err != nil {
 		return fmt.Errorf("NewPublicKeys error: %w", err)
+	}
+	if config.GitSSHSkipVerifyHostKey {
+		publicKeys.HostKeyCallbackHelper.HostKeyCallback = func(hostname string, remote net.Addr, key cryptossh.PublicKey) error {
+			return nil
+		}
 	}
 
 	repo, err := git.PlainClone(config.GitCloneDir, false, &git.CloneOptions{
@@ -38,7 +45,7 @@ func Execute(logger *log.Logger, config *Config) error {
 	if err != nil {
 		return fmt.Errorf("open worktree error: %w", err)
 	}
-	if err := BumpRepoImageVersion(logger, t.Filesystem, ".", config.Image, config.Tag); err != nil {
+	if err := BumpRepoImageVersion(logger, t.Filesystem, config.Path, config.Image, config.Tag); err != nil {
 		return fmt.Errorf("bumpRepoImageVersion error: %w", err)
 	}
 	status, err := t.Status()

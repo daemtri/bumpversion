@@ -47,8 +47,10 @@ func init() {
 	runCmd.Flags().String("git_ssh_key", "./ssh_private_key", "git repo SSH private key")
 	runCmd.Flags().String("git_ssh_key_user", "git", "git repo SSH private key user")
 	runCmd.Flags().String("git_ssh_key_password", "", "git repo SSH private key password")
+	runCmd.Flags().Bool("git_ssh_skip_verify_host_key", false, "don't verify server host key")
 	runCmd.Flags().StringP("image", "i", "", "image that need to be updated")
 	runCmd.Flags().StringP("tag", "t", "", "image version that needs to be updated")
+	runCmd.Flags().String("path", ".", "the path in the repo dir")
 
 	viper.BindPFlags(runCmd.Flags())
 }

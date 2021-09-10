@@ -52,5 +52,12 @@ func init() {
 	runCmd.Flags().StringP("tag", "t", "", "image version that needs to be updated")
 	runCmd.Flags().String("path", ".", "the path in the repo dir")
 
+	cobra.CheckErr(runCmd.MarkFlagFilename("git_ssh_key"))
+	cobra.CheckErr(runCmd.MarkFlagDirname("git_clone_dir"))
+
+	cobra.CheckErr(runCmd.MarkFlagRequired("git_url"))
+	cobra.CheckErr(runCmd.MarkFlagRequired("image"))
+	cobra.CheckErr(runCmd.MarkFlagRequired("tag"))
+
 	viper.BindPFlags(runCmd.Flags())
 }

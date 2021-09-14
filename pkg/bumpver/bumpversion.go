@@ -107,7 +107,7 @@ func BumpRepoImageVersion(logger *log.Logger, repo billy.Filesystem, path, image
 			if !errors.Is(err, ErrorImageNotFound) {
 				logger.Println("bumpversion:", fname, "error:", err)
 			}
-			continue
+			return err
 		}
 		logger.Println("bumpversion:", fname, "success")
 	}

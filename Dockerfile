@@ -4,7 +4,7 @@ ARG VERSION
 WORKDIR /src
 ENV CGO_ENABLED=0
 ENV GOPRIVATE="hub.imeete.com,git.imeete.com,git.bianfeng.com"
-ENV GOPROXY="https://goproxy.io"
+ENV GOPROXY="https://goproxy.cn"
 
 # 缓存
 COPY go.mod .

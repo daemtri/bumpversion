@@ -55,9 +55,5 @@ func init() {
 	cobra.CheckErr(runCmd.MarkFlagFilename("git_ssh_key"))
 	cobra.CheckErr(runCmd.MarkFlagDirname("git_clone_dir"))
 
-	cobra.CheckErr(runCmd.MarkFlagRequired("git_url"))
-	cobra.CheckErr(runCmd.MarkFlagRequired("image"))
-	cobra.CheckErr(runCmd.MarkFlagRequired("tag"))
-
 	viper.BindPFlags(runCmd.Flags())
 }

@@ -167,10 +167,9 @@ func BumpYamlImageVersion(yamlFile billy.File, image, tag string) (uint, error) 
 	if _, err := yamlFile.Seek(0, io.SeekStart); err != nil {
 		return 0, err
 	}
-	if err := yamlFile.Truncate(int64(len(bs))); err != nil {
+	if err := yamlFile.Truncate(0); err != nil {
 		return 0, err
 	}
-
 	if _, err := io.Copy(yamlFile, astFile); err != nil {
 		return 0, err
 	}

@@ -21,6 +21,10 @@ import (
 	cryptossh "golang.org/x/crypto/ssh"
 )
 
+var (
+	ErrorImageNotFound = errors.New("image not found")
+)
+
 func Execute(logger *log.Logger, config *Config) error {
 	publicKeys, err := ssh.NewPublicKeysFromFile(config.GitSSHKeyUser, config.GitSSHKey, config.GitSSHKeyPassword)
 	if err != nil {
@@ -98,39 +102,57 @@ func BumpRepoImageVersion(logger *log.Logger, repo billy.Filesystem, path, image
 		if !strings.HasSuffix(fname, ".yaml") {
 			continue
 		}
-		yamlFile, err := repo.OpenFile(fname, os.O_RDWR, os.ModePerm)
-		if err != nil {
-			return fmt.Errorf("open file error %s:%s", fname, err.Error())
-		}
-		if n, err := BumpYamlImageVersion(yamlFile, image, tag); err != nil {
-			if errors.Is(err, yaml.ErrNotFoundNode) {
-				continue
+
+		if err := BumpFileImageVersion(logger, repo, fname, image, tag); err != nil {
+			if !errors.Is(err, ErrorImageNotFound) {
+				logger.Println("bumpversion:", fname, "error:", err)
 			}
-			logger.Println("bumpversion:", fname, "error:", err)
-		} else {
-			if n > 0 {
-				logger.Println("bumpversion:", fname, "success", n)
-			}
+			continue
 		}
+		logger.Println("bumpversion:", fname, "success")
 	}
 
 	return nil
 }
 
-func BumpYamlImageVersion(yamlFile billy.File, image, tag string) (uint, error) {
-	bs, err := ioutil.ReadAll(yamlFile)
-	defer yamlFile.Close()
+func BumpFileImageVersion(logger *log.Logger, repo billy.Filesystem, path, image, tag string) error {
+	yamlFile, err := repo.OpenFile(path, os.O_RDWR, os.ModePerm)
 	if err != nil {
-		return 0, err
+		return fmt.Errorf("open file error %s:%s", path, err.Error())
+	}
+	defer yamlFile.Close()
+
+	bs, err := ioutil.ReadAll(yamlFile)
+	if err != nil {
+		return err
 	}
 
-	astFile, err := parser.ParseBytes(bs, parser.ParseComments)
+	result, err := BumpYamlImageVersion(bs, image, tag)
 	if err != nil {
-		return 0, err
+		return err
+	}
+
+	if _, err := yamlFile.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+	if yamlFile.Truncate(0); err != nil {
+		return err
+	}
+	if _, err := yamlFile.Write([]byte(result)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func BumpYamlImageVersion(yamlBytes []byte, image, tag string) (string, error) {
+	astFile, err := parser.ParseBytes(yamlBytes, parser.ParseComments)
+	if err != nil {
+		return "", err
 	}
 	kind, err := getResourceKind(astFile)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	var imagesPath *yaml.Path
@@ -140,12 +162,12 @@ func BumpYamlImageVersion(yamlFile billy.File, image, tag string) (uint, error) 
 	case "CronJob":
 		imagesPath, _ = yaml.PathString("$.spec.jobTemplate.spec.template.spec.containers[*].image")
 	default:
-		return 0, nil
+		return "", ErrorImageNotFound
 	}
 
 	node, err := imagesPath.FilterFile(astFile)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	var updated uint
@@ -160,20 +182,11 @@ func BumpYamlImageVersion(yamlFile billy.File, image, tag string) (uint, error) 
 		t.Value = image + ":" + tag
 		updated++
 	}
-	if updated <= 0 {
-		return 0, nil
+	if updated == 0 {
+		return "", ErrorImageNotFound
 	}
 
-	if _, err := yamlFile.Seek(0, io.SeekStart); err != nil {
-		return 0, err
-	}
-	if err := yamlFile.Truncate(0); err != nil {
-		return 0, err
-	}
-	if _, err := io.Copy(yamlFile, astFile); err != nil {
-		return 0, err
-	}
-	return updated, nil
+	return astFile.String(), nil
 }
 
 func getResourceKind(astFile *ast.File) (string, error) {

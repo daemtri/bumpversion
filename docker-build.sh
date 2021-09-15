@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 [[ -z $(git status -s) ]] || (echo "git is not clean" && exit 1);
 VERSION=`git describe --tags`
 BV_VERSION=${VERSION#v}

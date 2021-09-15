@@ -109,7 +109,7 @@ func BumpRepoImageVersion(logger *log.Logger, repo billy.Filesystem, path, image
 			}
 			continue
 		}
-		logger.Println("bumpversion:", fname, "success")
+		logger.Println("bumpversion:", fname, "SUCCEEDED")
 	}
 
 	return nil
@@ -152,6 +152,9 @@ func BumpYamlImageVersion(yamlBytes []byte, image, tag string) (string, error) {
 	}
 	kind, err := getResourceKind(astFile)
 	if err != nil {
+		if errors.Is(err, yaml.ErrNotFoundNode) {
+			return "", ErrorImageNotFound
+		}
 		return "", err
 	}
 
@@ -167,6 +170,9 @@ func BumpYamlImageVersion(yamlBytes []byte, image, tag string) (string, error) {
 
 	node, err := imagesPath.FilterFile(astFile)
 	if err != nil {
+		if errors.Is(err, yaml.ErrNotFoundNode) {
+			return "", ErrorImageNotFound
+		}
 		return "", err
 	}
 

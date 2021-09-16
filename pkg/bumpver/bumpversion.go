@@ -177,7 +177,11 @@ func BumpYamlImageVersion(yamlBytes []byte, image, tag string) (string, error) {
 	}
 
 	var updated uint
-	imageListNodes := node.(*ast.SequenceNode).Values
+	containers, ok := node.(*ast.SequenceNode)
+	if !ok {
+		return "", errors.New("image path filter: not SequenceNode")
+	}
+	imageListNodes := containers.Values
 	for i := range imageListNodes {
 		t := imageListNodes[i].(*ast.StringNode)
 		imageAndOldTag := strings.SplitN(t.Value, ":", 2)
